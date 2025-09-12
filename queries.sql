@@ -1,3 +1,28 @@
+
+-- Analytical Topics
+
+-- This project explores 10 key analytics, including:
+
+-- Number of orders per customer.
+
+-- Top products by total revenue.
+
+-- Payment type distribution.
+
+-- Average review score per seller.
+
+-- Orders by customer state.
+
+-- Most active sellers by items sold.
+
+-- Freight cost share of total price.
+
+-- Orders per month (trend analysis).
+
+-- Average delivery delay (days).
+
+-- Correlation between review score and delivery time.
+
 -- 1. Number of orders per customer
 SELECT customer_id, COUNT(order_id) AS total_orders
 FROM orders

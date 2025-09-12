@@ -3,10 +3,10 @@ import pandas as pd
 
 # Database connection details
 DB_CONFIG = {
-    "dbname": "Urbancart",      # your database name
-    "user": "postgres",         # your postgres username
-    "password": "0000",# change to your actual password
-    "host": "localhost",        # or 127.0.0.1
+    "dbname": "Urbancart",     
+    "user": "postgres",     
+    "password": "0000",
+    "host": "localhost",   
     "port": 5432
 }
 
