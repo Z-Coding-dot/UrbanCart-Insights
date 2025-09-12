@@ -40,7 +40,7 @@ def run_queries():
     try:
         # Connect to PostgreSQL
         conn = psycopg2.connect(**DB_CONFIG)
-        print("✅ Connected to database")
+        print(" Connected to database")
 
         for name, query in QUERIES.items():
             print(f"\n--- {name} ---")
@@ -48,10 +48,10 @@ def run_queries():
             print(df)
 
         conn.close()
-        print("\n✅ Done")
+        print("\n Done")
 
     except Exception as e:
-        print("❌ Error:", e)
+        print("Error:", e)
 
 if __name__ == "__main__":
     run_queries()
