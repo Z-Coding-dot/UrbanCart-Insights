@@ -36,7 +36,7 @@ The database contains the following main tables:
 - Each `order_item` links to a `product` and a `seller`.  
 - `geolocation` helps map customers and sellers geographically.  
 
-_ER diagram (to be added in `/images/1.png`)._
+_ER diagram (to be added in `/images/one.png`)._
 
 ---
 
