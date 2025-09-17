@@ -44,12 +44,55 @@ The database contains the following main tables:
 ---
 
 ## Setup Instructions
-1. Install **PostgreSQL 17** and **Python 3.10+**.  
-2. Create a database called `urbancart`.  
-3. Run the provided `schema.sql` file to create tables.  
-4. Import CSVs using `\copy` in `psql` (see `import_instructions.sql`).  
-5. Verify with sample queries from `queries.sql`.  
-6. Run the Python script:  
+
+### Prerequisites
+1. Install **PostgreSQL 17** and **Python 3.10+**
+2. Install required Python packages:
    ```bash
-   pip install psycopg2-binary pandas
-   python main.py
+   pip install psycopg2-binary pandas sqlalchemy
+   ```
+
+### Database Setup
+1. **Run the setup script** (recommended):
+   ```bash
+   python setup_database.py
+   ```
+   
+   OR manually:
+   
+2. Create a database called `urbancart`:
+   ```sql
+   createdb -U postgres urbancart
+   ```
+
+3. Run the schema file to create tables:
+   ```bash
+   psql -U postgres -d urbancart -f schema.sql
+   ```
+
+### Data Import
+1. **Download the Olist dataset** from [Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
+2. **Extract and rename** the CSV files to match these exact names:
+   - `olist_customers_dataset.csv`
+   - `olist_sellers_dataset.csv`
+   - `olist_products_dataset.csv`
+   - `olist_orders_dataset.csv`
+   - `olist_order_items_dataset.csv`
+   - `olist_order_payments_dataset.csv`
+   - `olist_order_reviews_dataset.csv`
+   - `olist_geolocation_dataset.csv`
+
+3. **Import the data**:
+   ```bash
+   psql -U postgres -d urbancart -f import_instructions.sql
+   ```
+
+### Run the Analysis
+```bash
+python main.py
+```
+
+### Troubleshooting
+- **"relation does not exist" errors**: Make sure you've run `schema.sql` and imported the CSV data
+- **Connection errors**: Verify PostgreSQL is running and credentials are correct in `main.py`
+- **Import errors**: Check that CSV files are in the correct directory and have the right names

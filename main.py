@@ -1,57 +1,43 @@
 import psycopg2
 import pandas as pd
+import re
+import warnings
+warnings.filterwarnings('ignore', message='pandas only supports SQLAlchemy')
 
 # Database connection details
 DB_CONFIG = {
-    "dbname": "Urbancart",     
-    "user": "postgres",     
+    "dbname": "Urbancart",  # <- set to your exact DB name from pgAdmin
+    "user": "postgres",
     "password": "0000",
-    "host": "localhost",   
+    "host": "localhost",
     "port": 5432
 }
 
-# Define queries
-QUERIES = {
-    "orders_per_customer": """
-        SELECT customer_id, COUNT(order_id) AS total_orders
-        FROM orders
-        GROUP BY customer_id
-        ORDER BY total_orders DESC
-        LIMIT 5;
-    """,
-    "top_products": """
-        SELECT oi.product_id, SUM(oi.price) AS total_revenue
-        FROM order_items oi
-        GROUP BY oi.product_id
-        ORDER BY total_revenue DESC
-        LIMIT 5;
-    """,
-    "orders_per_month": """
-        SELECT DATE_TRUNC('month', order_purchase_timestamp) AS month,
-               COUNT(*) AS total_orders
-        FROM orders
-        GROUP BY month
-        ORDER BY month
-        LIMIT 5;
-    """
-}
-
-def run_queries():
+def run_queries_from_file(sql_file):
     try:
-        # Connect to PostgreSQL
         conn = psycopg2.connect(**DB_CONFIG)
-        print(" Connected to database")
+        print("✅ Connected to database")
 
-        for name, query in QUERIES.items():
-            print(f"\n--- {name} ---")
-            df = pd.read_sql(query, conn)
-            print(df)
+        with open(sql_file, "r", encoding="utf-8") as f:
+            sql_content = f.read()
+
+        queries = [q.strip() for q in sql_content.split(";") if q.strip()]
+
+        for i, query in enumerate(queries, start=1):
+            query_clean = re.sub(r'--.*\n', '', query)  # remove comments
+            if query_clean.strip():
+                print(f"\n--- Query {i} ---")
+                try:
+                    df = pd.read_sql(query_clean, conn)
+                    print(df.head(10))
+                except Exception as qe:
+                    print(f"⚠️ Error running Query {i}: {qe}")
 
         conn.close()
-        print("\n Done")
+        print("\n✅ Done")
 
     except Exception as e:
-        print("Error:", e)
+        print("❌ Error:", e)
 
 if __name__ == "__main__":
-    run_queries()
+    run_queries_from_file("queries.sql")
