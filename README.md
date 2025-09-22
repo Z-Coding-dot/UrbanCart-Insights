@@ -36,9 +36,9 @@ The database contains the following main tables:
 - Each `order_item` links to a `product` and a `seller`.  
 - `geolocation` helps map customers and sellers geographically.  
 
+![Examples From queries & Analytical Topics](/charts/orders_per_month.png)
+![Examples From queries & Analytical Topics](/charts/price_vs_freight.png)
 ![Examples From queries & Analytical Topics](/images/diagram.png)
-![Examples From queries & Analytical Topics](/images/one.png)
-![Examples From queries & Analytical Topics](/images/3.png)
 ![Examples From queries & Analytical Topics](/images/7.png)
 
 ---
@@ -96,3 +96,31 @@ python main.py
 - **"relation does not exist" errors**: Make sure you've run `schema.sql` and imported the CSV data
 - **Connection errors**: Verify PostgreSQL is running and credentials are correct in `main.py`
 - **Import errors**: Check that CSV files are in the correct directory and have the right names
+
+---
+
+## Assignment 2 - Visualizations & Export
+
+This repository includes Assignment #2 deliverables built on the UrbanCart database.
+
+What gets generated when you run `python main.py`:
+- 6 charts saved to `charts/` with titles/labels/legend where applicable:
+  - `payment_pie.png` — Distribution of payment types (JOIN with orders/customers)
+  - `top_products_bar.png` — Top 10 product categories by revenue (delivered)
+  - `orders_state_barh.png` — Orders by customer state (paid orders)
+  - `orders_per_month.png` — Monthly revenue trend (delivered)
+  - `review_scores_histogram.png` — Distribution of review scores
+  - `price_vs_freight.png` — Product price vs freight cost scatter
+- Plotly time-slider demo (interactive window): Orders over time by year
+- Formatted Excel export saved to `exports/report.xlsx` with:
+  - Frozen header (`B2`), filters on all columns
+  - Numeric columns with a 3-color gradient scale
+  - Console summary: file name, sheet count, total rows
+
+Notes:
+- If your `reviews` table is empty, the script seeds a few synthetic reviews (delivered orders) for demo purposes so the histogram is not empty.
+- All data is loaded from PostgreSQL via SQL queries; queries use JOINs and meaningful business aggregations.
+
+Demo flow for defense:
+1. Run: `python main.py` to generate charts and open the Plotly slider.
+2. Insert/update a row (use your own insert or the included seeding), then rerun the relevant chart function by re-running the script to show the update reflected.
