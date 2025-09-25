@@ -6,6 +6,7 @@ import os
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import ColorScaleRule
+import re
 
 # ==============================
 # Database Config
@@ -40,125 +41,151 @@ def execute_non_query(query, params=None):
         conn.commit()
 
 # ==============================
+# Utility: Load Assignment 2 Queries from queries.sql
+# ==============================
+def load_assignment2_queries(path="queries.sql"):
+    """Parse Assignment 2 queries (Q1..Q7) from queries.sql and normalize schema names.
+
+    Returns a dict like {"Q1": sql, ..., "Q7": sql}
+    """
+    if not os.path.exists(path):
+        return {}
+
+    with open(path, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    # Extract the section after ASSIGNMENT 2 header if present
+    assign2_split = re.split(r"-+\s*ASSIGNMENT\s*2\s*QUERIES.*?\n", text, flags=re.IGNORECASE | re.DOTALL)
+    text_to_parse = assign2_split[-1] if len(assign2_split) > 1 else text
+
+    # Split by lines that look like -- Qn:
+    parts = re.split(r"(^--\s*Q(\d+)\s*:[^\n]*$)", text_to_parse, flags=re.MULTILINE)
+    queries = {}
+    # parts structure with capturing groups: [pre, header1, num1, body1, header2, num2, body2, ...]
+    for idx in range(1, len(parts), 3):
+        header = parts[idx]
+        num = parts[idx + 1] if (idx + 1) < len(parts) else None
+        body = parts[idx + 2] if (idx + 2) < len(parts) else ""
+
+        match = re.match(r"^--\s*Q(\d+)\s*:", header)
+        key = f"Q{match.group(1)}" if match else (f"Q{num}" if num else None)
+        if not key:
+            continue
+
+        sql = body.strip()
+        # Stop at next header if any remnants included
+        sql = re.split(r"^--\s*Q\d+\s*:", sql, flags=re.MULTILINE)[0].strip()
+
+        # Normalize schema differences
+        sql = sql.replace("order_reviews", "reviews")
+        sql = sql.replace("p.product_category", "p.product_category_name")
+
+        queries[key] = sql
+
+    return queries
+
+# ==============================
 # Part 1: Charts
 # ==============================
 def create_charts():
     charts_info = []
+    queries = load_assignment2_queries()
 
-    # 1. Pie Chart – Payment type distribution (based on actual orders)
-    q1 = """
-         SELECT p.payment_type, COUNT(*) AS total_payments
-         FROM payments p
-                  JOIN orders o ON p.order_id = o.order_id
-                  JOIN customers c ON o.customer_id = c.customer_id
-         GROUP BY p.payment_type; \
-         """
-    df1 = get_dataframe(q1)
-    df1.set_index("payment_type").plot.pie(
-        y="total_payments", autopct='%1.1f%%', legend=False, figsize=(6,6))
-    plt.title("Distribution of Payment Types")
-    plt.ylabel("")
-    file1 = f"{CHARTS_DIR}/payment_pie.png"
-    plt.savefig(file1)
-    plt.close()
-    charts_info.append((len(df1), "Pie Chart", "Distribution of payment types"))
+    # 1. Pie Chart – Top states by number of customers (Q1)
+    q1 = queries.get("Q1")
+    if q1:
+        df1 = get_dataframe(q1)
+        value_col = "num_customers" if "num_customers" in df1.columns else df1.columns[-1]
+        label_col = "customer_state" if "customer_state" in df1.columns else df1.columns[0]
+        df1.set_index(label_col).plot.pie(y=value_col, autopct='%1.1f%%', legend=False, figsize=(7, 7))
+        plt.title("Distribution of Customers by State")
+        plt.ylabel("")
+        file1 = f"{CHARTS_DIR}/customers_state_pie.png"
+        plt.savefig(file1)
+        plt.close()
+        charts_info.append((len(df1), "Pie Chart", "Distribution of customers by state"))
 
-    # 2. Bar Chart – Top 10 categories by revenue (delivered orders)
-    q2 = """
-         SELECT p.product_category_name, SUM(oi.price) AS total_revenue
-         FROM order_items oi
-                  JOIN products p ON oi.product_id = p.product_id
-                  JOIN orders o ON oi.order_id = o.order_id
-         WHERE o.order_status = 'delivered'
-         GROUP BY p.product_category_name
-         ORDER BY total_revenue DESC
-             LIMIT 10; \
-         """
-    df2 = get_dataframe(q2)
-    df2.plot.bar(x="product_category_name", y="total_revenue", legend=False, figsize=(12, 6))
-    plt.title("Top 10 Product Categories by Revenue")
-    plt.xlabel("Product Category")
-    plt.ylabel("Total Revenue")
-    plt.xticks(rotation=45, ha="right")
-    plt.tight_layout()
-    file2 = f"{CHARTS_DIR}/top_products_bar.png"
-    plt.savefig(file2)
-    plt.close()
-    charts_info.append((len(df2), "Bar Chart", "Top 10 product categories by revenue"))
+    # 2. Bar Chart – Top product categories by revenue (Q2)
+    q2 = queries.get("Q2")
+    if q2:
+        df2 = get_dataframe(q2)
+        cat_col = "product_category_name" if "product_category_name" in df2.columns else ("product_category" if "product_category" in df2.columns else df2.columns[0])
+        ax2 = df2.plot.bar(x=cat_col, y="total_revenue", legend=False, figsize=(13, 7))
+        plt.title("Top Product Categories by Revenue")
+        plt.xlabel("Product Category")
+        plt.ylabel("Total Revenue")
+        plt.xticks(rotation=45, ha="right", fontsize=9)
+        plt.gcf().subplots_adjust(bottom=0.25)
+        plt.tight_layout()
+        file2 = f"{CHARTS_DIR}/top_products_bar.png"
+        plt.savefig(file2)
+        plt.close()
+        charts_info.append((len(df2), "Bar Chart", "Top product categories by revenue"))
 
-    # 3. Horizontal Bar – Orders by state (paid orders)
-    q3 = """
-         SELECT c.customer_state, COUNT(DISTINCT o.order_id) AS total_orders
-         FROM orders o
-                  JOIN customers c ON o.customer_id = c.customer_id
-                  JOIN payments p ON o.order_id = p.order_id
-         GROUP BY c.customer_state
-         ORDER BY total_orders DESC; \
-         """
-    df3 = get_dataframe(q3)
-    df3.plot.barh(x="customer_state", y="total_orders", legend=False)
-    plt.title("Orders by State")
-    plt.xlabel("Total Orders")
-    plt.ylabel("Customer State")
-    file3 = f"{CHARTS_DIR}/orders_state_barh.png"
-    plt.savefig(file3)
-    plt.close()
-    charts_info.append((len(df3), "Horizontal Bar Chart", "Orders count by state"))
+    # 3. Line Chart – Monthly revenue trend (Q3)
+    q3 = queries.get("Q3")
+    if q3:
+        df3 = get_dataframe(q3)
+        time_col = "month" if "month" in df3.columns else df3.columns[0]
+        y_col = "monthly_revenue" if "monthly_revenue" in df3.columns else df3.columns[-1]
+        ax3 = df3.plot.line(x=time_col, y=y_col, marker="o", figsize=(13, 6))
+        plt.title("Monthly Revenue Trend")
+        plt.xlabel("Month")
+        plt.ylabel("Revenue")
+        plt.xticks(rotation=45, ha="right")
+        plt.gcf().subplots_adjust(bottom=0.25)
+        plt.tight_layout()
+        file3 = f"{CHARTS_DIR}/monthly_revenue_line.png"
+        plt.savefig(file3)
+        plt.close()
+        charts_info.append((len(df3), "Line Chart", "Monthly revenue trend"))
 
-    # 4. Line Chart – Monthly revenue trend (delivered orders)
-    q4 = """
-         SELECT DATE_TRUNC('month', o.order_purchase_timestamp) AS month,
-                SUM(oi.price) AS monthly_revenue
-         FROM orders o
-                  JOIN order_items oi ON o.order_id = oi.order_id
-         WHERE o.order_status = 'delivered'
-         GROUP BY month
-         ORDER BY month; \
-         """
-    df4 = get_dataframe(q4)
-    df4.plot.line(x="month", y="monthly_revenue", marker="o")
-    plt.title("Monthly Revenue (Delivered Orders)")
-    plt.xlabel("Month")
-    plt.ylabel("Revenue")
-    file4 = f"{CHARTS_DIR}/orders_per_month.png"
-    plt.savefig(file4)
-    plt.close()
-    charts_info.append((len(df4), "Line Chart", "Orders trend per month"))
+    # 4. Horizontal Bar – Top sellers by revenue (Q4)
+    q4 = queries.get("Q4")
+    if q4:
+        df4 = get_dataframe(q4)
+        seller_col = "seller_id" if "seller_id" in df4.columns else df4.columns[0]
+        df4.plot.barh(x=seller_col, y="total_revenue", legend=False, figsize=(12, 7))
+        plt.title("Top Sellers by Revenue")
+        plt.xlabel("Total Revenue")
+        plt.ylabel("Seller")
+        plt.tight_layout()
+        file4 = f"{CHARTS_DIR}/top_sellers_barh.png"
+        plt.savefig(file4)
+        plt.close()
+        charts_info.append((len(df4), "Horizontal Bar Chart", "Top sellers by revenue"))
 
-    # 5. Histogram – Review score distribution (all reviews, keep rows via LEFT JOIN)
-    q5 = """
-         SELECT CAST(r.review_score AS INTEGER) AS review_score
-         FROM reviews r
-                  LEFT JOIN orders o ON r.order_id = o.order_id
-         WHERE r.review_score IS NOT NULL; \
-         """
-    df5 = get_dataframe(q5)
-    df5["review_score"] = pd.to_numeric(df5["review_score"], errors="coerce")
-    df5["review_score"].plot.hist(bins=5, rwidth=0.9)
-    plt.title("Distribution of Review Scores")
-    plt.xlabel("Review Score")
-    plt.ylabel("Frequency")
-    file5 = f"{CHARTS_DIR}/review_scores_histogram.png"
-    plt.savefig(file5)
-    plt.close()
-    charts_info.append((len(df5), "Histogram", "Distribution of review scores"))
+    # 5. Histogram – Distribution of review scores (Q5)
+    q5 = queries.get("Q5")
+    if q5:
+        df5 = get_dataframe(q5)
+        if "review_score" in df5.columns:
+            df5["review_score"] = pd.to_numeric(df5["review_score"], errors="coerce")
+            df5["review_score"].plot.hist(bins=5, rwidth=0.9, figsize=(10, 6))
+            plt.title("Distribution of Review Scores")
+            plt.xlabel("Review Score")
+            plt.ylabel("Frequency")
+            plt.tight_layout()
+            file5 = f"{CHARTS_DIR}/review_scores_histogram.png"
+            plt.savefig(file5)
+            plt.close()
+            charts_info.append((len(df5), "Histogram", "Distribution of review scores"))
 
-    # 6. Scatter Plot – Product price vs freight cost (guaranteed available data)
-    q6 = """
-         SELECT oi.price, oi.freight_value
-         FROM order_items oi
-                  JOIN orders o ON oi.order_id = o.order_id
-         WHERE oi.price > 0 AND oi.freight_value > 0; \
-         """
-    df6 = get_dataframe(q6)
-    df6.plot.scatter(x="price", y="freight_value", alpha=0.4)
-    plt.title("Product Price vs Freight Cost")
-    plt.xlabel("Price")
-    plt.ylabel("Freight Cost")
-    file6 = f"{CHARTS_DIR}/price_vs_freight.png"
-    plt.savefig(file6)
-    plt.close()
-    charts_info.append((len(df6), "Scatter Plot", "Relationship between product price and freight cost"))
+    # 6. Scatter Plot – Delivery time vs review score (Q6)
+    q6 = queries.get("Q6")
+    if q6:
+        df6 = get_dataframe(q6)
+        x_col = "delivery_days" if "delivery_days" in df6.columns else df6.columns[0]
+        y_col = "review_score" if "review_score" in df6.columns else df6.columns[-1]
+        df6.plot.scatter(x=x_col, y=y_col, alpha=0.4, figsize=(10, 6))
+        plt.title("Delivery Days vs Review Score")
+        plt.xlabel("Delivery Days")
+        plt.ylabel("Review Score")
+        plt.tight_layout()
+        file6 = f"{CHARTS_DIR}/delivery_vs_review_scatter.png"
+        plt.savefig(file6)
+        plt.close()
+        charts_info.append((len(df6), "Scatter Plot", "Delivery time vs review score"))
 
     # Console report
     for rows, gtype, desc in charts_info:
@@ -214,18 +241,23 @@ def seed_reviews_if_empty(max_inserts=20):
 # Part 2: Time Slider (Plotly)
 # ==============================
 def time_slider_chart():
-    q = """
-        SELECT DATE_TRUNC('month', order_purchase_timestamp) AS month,
-               COUNT(*) AS total_orders
-        FROM orders
-        GROUP BY month
-        ORDER BY month; \
-        """
+    queries = load_assignment2_queries()
+    q = queries.get("Q7")
+    if not q:
+        # Fallback if Q7 not present
+        q = (
+            "SELECT DATE_TRUNC('month', order_purchase_timestamp) AS month, "
+            "COUNT(*) AS total_orders FROM orders GROUP BY month ORDER BY month;"
+        )
     df = get_dataframe(q)
+    # Ensure we have a time column named month
+    if "month" not in df.columns:
+        # Use first datetime-like column if exists
+        df.rename(columns={df.columns[0]: "month"}, inplace=True)
     df["month"] = pd.to_datetime(df["month"])
     df["year"] = df["month"].dt.year
 
-    fig = px.bar(df, x="month", y="total_orders",
+    fig = px.bar(df, x="month", y=df.columns[1],
                  animation_frame="year",
                  title="Orders Over Time (Interactive)")
     fig.show()

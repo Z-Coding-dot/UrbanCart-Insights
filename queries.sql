@@ -1,6 +1,4 @@
------------------------------------------------------
 -- ASSIGNMENT 1 QUERIES (10 Total)
------------------------------------------------------
 
 -- 1. Number of orders per customer (Top 10)
 SELECT customer_id, COUNT(order_id) AS total_orders
@@ -95,7 +93,7 @@ FROM order_items oi
          JOIN products p ON oi.product_id = p.product_id
 GROUP BY p.product_category
 ORDER BY total_revenue DESC
-    LIMIT 10;
+    LIMIT 8;
 
 -- Q3: Monthly revenue trend (Line Chart)
 SELECT DATE_TRUNC('month', o.order_purchase_timestamp) AS month,
