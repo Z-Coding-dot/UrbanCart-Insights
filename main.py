@@ -8,14 +8,14 @@ from openpyxl.styles import PatternFill
 from openpyxl.formatting.rule import ColorScaleRule
 import re
 
-# ==============================
 # Database Config
-# ==============================
+
 DB_CONFIG = {
     "dbname": "Urbancart",
     "user": "postgres",
     "password": "0000",
     "host": "localhost",
+
     "port": 5432
 }
 
@@ -25,9 +25,9 @@ EXPORTS_DIR = "exports"
 os.makedirs(CHARTS_DIR, exist_ok=True)
 os.makedirs(EXPORTS_DIR, exist_ok=True)
 
-# ==============================
+
 # Utility: Query Runner
-# ==============================
+
 def get_dataframe(query):
     """Run a SQL query and return a pandas DataFrame"""
     with psycopg2.connect(**DB_CONFIG) as conn:
@@ -40,9 +40,9 @@ def execute_non_query(query, params=None):
             cur.execute(query, params or ())
         conn.commit()
 
-# ==============================
+
 # Utility: Load Assignment 2 Queries from queries.sql
-# ==============================
+
 def load_assignment2_queries(path="queries.sql"):
     """Parse Assignment 2 queries (Q1..Q7) from queries.sql and normalize schema names.
 
@@ -84,9 +84,9 @@ def load_assignment2_queries(path="queries.sql"):
 
     return queries
 
-# ==============================
+
 # Part 1: Charts
-# ==============================
+
 def create_charts():
     charts_info = []
     queries = load_assignment2_queries()
@@ -237,9 +237,9 @@ def seed_reviews_if_empty(max_inserts=20):
         conn.commit()
     print(f"Seeded {len(order_ids)} synthetic reviews to enable histogram.")
 
-# ==============================
+
 # Part 2: Time Slider (Plotly)
-# ==============================
+
 def time_slider_chart():
     queries = load_assignment2_queries()
     q = queries.get("Q7")
@@ -262,9 +262,8 @@ def time_slider_chart():
                  title="Orders Over Time (Interactive)")
     fig.show()
 
-# ==============================
+
 # Part 3: Export to Excel
-# ==============================
 def export_to_excel(dataframes_dict, filename):
     filepath = os.path.join(EXPORTS_DIR, filename)
     with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
@@ -303,9 +302,7 @@ def export_to_excel(dataframes_dict, filename):
     wb.save(filepath)
     print(f"Created file {filename}, {len(dataframes_dict)} sheets, {total_rows} rows")
 
-# ==============================
 # Main
-# ==============================
 if __name__ == "__main__":
     print("=== Generating Charts ===")
     # Seed reviews if empty so histogram is non-empty for defense

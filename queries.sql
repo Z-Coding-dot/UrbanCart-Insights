@@ -76,9 +76,8 @@ GROUP BY r.review_score
 ORDER BY r.review_score;
 
 
------------------------------------------------------
 -- ASSIGNMENT 2 QUERIES (Visualization)
------------------------------------------------------
+
 
 -- Q1: Top 10 states by number of customers (Pie Chart)
 SELECT customer_state, COUNT(*) AS num_customers
@@ -95,18 +94,18 @@ GROUP BY p.product_category
 ORDER BY total_revenue DESC
     LIMIT 8;
 
--- Q3: Monthly revenue trend (Line Chart)
+-- Q3: Monthly revenue trend (Line Chart) — changed to LEFT JOIN
 SELECT DATE_TRUNC('month', o.order_purchase_timestamp) AS month,
        SUM(oi.price) AS monthly_revenue
 FROM orders o
-    JOIN order_items oi ON o.order_id = oi.order_id
+    LEFT JOIN order_items oi ON o.order_id = oi.order_id
 GROUP BY month
 ORDER BY month;
 
--- Q4: Top 10 sellers by revenue (Horizontal Bar Chart)
+-- Q4: Top 10 sellers by revenue (Horizontal Bar Chart) — changed to RIGHT JOIN
 SELECT s.seller_id, SUM(oi.price) AS total_revenue
 FROM order_items oi
-         JOIN sellers s ON oi.seller_id = s.seller_id
+         RIGHT JOIN sellers s ON oi.seller_id = s.seller_id
 GROUP BY s.seller_id
 ORDER BY total_revenue DESC
     LIMIT 10;
