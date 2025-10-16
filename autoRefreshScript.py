@@ -12,7 +12,6 @@ DB_PASS = "0000"
 DB_HOST = "localhost" # or 'host.docker.internal' if running script outside a docker network
 DB_PORT = "5432"
 
-# --- FOREIGN KEY REFERENCES (REPLACE WITH VALID, EXISTING IDs) ---
 # These are required to ensure the inserted data is "meaningful" and respects FK constraints.
 EXISTING_CUSTOMER_ID = "00012a2ce6f8dcda20d059ce98491703" # Example existing Customer ID
 EXISTING_SELLER_ID = "0015a82c2db000af6aaaf3ae2ecb0532"   # Example existing Seller ID
