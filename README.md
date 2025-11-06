@@ -41,7 +41,119 @@ The database contains the following main tables:
 ![Examples From queries & Analytical Topics](/images/diagram.png)
 ![Examples From queries & Analytical Topics](/images/7.png)
 
+
 ---
+
+# Prometheus + Grafana Monitoring Project
+
+## Overview
+
+This project demonstrates **real-time system and data monitoring** using **Prometheus** and **Grafana**.
+Three separate dashboards were built to visualize and alert on metrics from:
+
+1. **PostgreSQL Database Exporter**
+2. **Node Exporter (System Metrics)**
+3. **Custom Exporter (Weather API)**
+
+---
+
+## 1. Database Exporter (PostgreSQL)
+
+**Purpose:** Monitor database performance and activity.
+**Metrics visualized:**
+
+* Number of active connections
+* Database size (GB)
+* Query per second (QPS)
+* Uptime
+* Read/write rate
+* Number of users and tables
+
+**Alert:**
+Triggers when active connections > 50.
+
+**Filter:**
+`database` (selects monitored database).
+
+---
+
+## 2. Node Exporter (System Metrics)
+
+**Purpose:** Track system resource usage in real time.
+**Metrics visualized:**
+
+* CPU usage per core
+* Load average (1, 5, 15 min)
+* Memory usage (total, used, free)
+* Disk I/O
+* Network traffic (in/out)
+* System uptime
+
+**Alert:**
+Triggers when CPU usage > 80%.
+
+**Filter:**
+`instance` (monitored system node).
+
+---
+
+## 3. Custom Exporter (Weather API)
+
+**Purpose:** Collect and expose live weather data from OpenWeather API using a custom Python exporter.
+**Metrics visualized:**
+
+* Temperature (°C)
+* Humidity (%)
+* Pressure (hPa)
+* Wind speed (m/s)
+* Cloudiness (%)
+* Temperature difference (feels_like − actual)
+* Sunrise / Sunset
+
+**Alert:**
+Triggers when temperature < −10°C or > 35°C.
+
+**Filter:**
+`city` (Astana, Almaty, London).
+
+---
+
+## Tools and Configuration
+
+* **Prometheus** – metrics collection
+* **Grafana** – dashboards and alerting
+* **Docker Compose** – runs Prometheus, Grafana, and exporters
+* **custom_exporter.py** – Python script exposing metrics on port 8010
+* **prometheus.yml** – Prometheus scrape configuration
+
+---
+
+## Files in Repository
+
+* `docker-compose.yml`
+* `prometheus.yml`
+* `custom_exporter.py`
+* `README.md`
+* `dashboards/` (exported JSON files of all 3 dashboards)
+
+---
+
+## How to Run
+
+1. Start all containers:
+
+   ```bash
+   docker compose up -d
+   ```
+2. Run the Python exporter:
+
+   ```bash
+   python custom_exporter.py
+   ```
+3. Open Grafana → `http://localhost:3000`
+4. Explore dashboards and confirm all targets show **UP** in Prometheus.
+
+
 
 ## Setup Instructions
 
@@ -124,3 +236,10 @@ Notes:
 Demo flow for defense:
 1. Run: `python main.py` to generate charts and open the Plotly slider.
 2. Insert/update a row (use your own insert or the included seeding), then rerun the relevant chart function by re-running the script to show the update reflected.
+
+
+
+---
+
+**Author:** Parsa Karimi
+**Course:** Data Visualization — 2025/11/6
