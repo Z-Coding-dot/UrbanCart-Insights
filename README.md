@@ -42,6 +42,34 @@ The database contains the following main tables:
 ![Examples From queries & Analytical Topics](/images/7.png)
 
 
+## Assignment 2 - Visualizations & Export
+
+This repository includes Assignment #2 deliverables built on the UrbanCart database.
+
+What gets generated when you run `python main.py`:
+- 6 charts saved to `charts/` with titles/labels/legend where applicable:
+  - `payment_pie.png` — Distribution of payment types (JOIN with orders/customers)
+  - `top_products_bar.png` — Top 10 product categories by revenue (delivered)
+  - `orders_state_barh.png` — Orders by customer state (paid orders)
+  - `orders_per_month.png` — Monthly revenue trend (delivered)
+  - `review_scores_histogram.png` — Distribution of review scores
+  - `price_vs_freight.png` — Product price vs freight cost scatter
+- Plotly time-slider demo (interactive window): Orders over time by year
+- Formatted Excel export saved to `exports/report.xlsx` with:
+  - Frozen header (`B2`), filters on all columns
+  - Numeric columns with a 3-color gradient scale
+  - Console summary: file name, sheet count, total rows
+
+Notes:
+- If your `reviews` table is empty, the script seeds a few synthetic reviews (delivered orders) for demo purposes so the histogram is not empty.
+- All data is loaded from PostgreSQL via SQL queries; queries use JOINs and meaningful business aggregations.
+
+Demo flow for defense:
+1. Run: `python main.py` to generate charts and open the Plotly slider.
+2. Insert/update a row (use your own insert or the included seeding), then rerun the relevant chart function by re-running the script to show the update reflected.
+
+---
+## Assignment 3 Prometheus + Grafana Monitoring Project
 ---
 
 # Prometheus + Grafana Monitoring Project
@@ -169,9 +197,9 @@ Triggers when temperature < −10°C or > 35°C.
    ```bash
    python setup_database.py
    ```
-   
+
    OR manually:
-   
+
 2. Create a database called `urbancart`:
    ```sql
    createdb -U postgres urbancart
@@ -185,14 +213,14 @@ Triggers when temperature < −10°C or > 35°C.
 ### Data Import
 1. **Download the Olist dataset** from [Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)
 2. **Extract and rename** the CSV files to match these exact names:
-   - `olist_customers_dataset.csv`
-   - `olist_sellers_dataset.csv`
-   - `olist_products_dataset.csv`
-   - `olist_orders_dataset.csv`
-   - `olist_order_items_dataset.csv`
-   - `olist_order_payments_dataset.csv`
-   - `olist_order_reviews_dataset.csv`
-   - `olist_geolocation_dataset.csv`
+    - `olist_customers_dataset.csv`
+    - `olist_sellers_dataset.csv`
+    - `olist_products_dataset.csv`
+    - `olist_orders_dataset.csv`
+    - `olist_order_items_dataset.csv`
+    - `olist_order_payments_dataset.csv`
+    - `olist_order_reviews_dataset.csv`
+    - `olist_geolocation_dataset.csv`
 
 3. **Import the data**:
    ```bash
@@ -211,35 +239,101 @@ python main.py
 
 ---
 
-## Assignment 2 - Visualizations & Export
+# **Data Visualization Assignment #5 — Open3D Project**
 
-This repository includes Assignment #2 deliverables built on the UrbanCart database.
-
-What gets generated when you run `python main.py`:
-- 6 charts saved to `charts/` with titles/labels/legend where applicable:
-  - `payment_pie.png` — Distribution of payment types (JOIN with orders/customers)
-  - `top_products_bar.png` — Top 10 product categories by revenue (delivered)
-  - `orders_state_barh.png` — Orders by customer state (paid orders)
-  - `orders_per_month.png` — Monthly revenue trend (delivered)
-  - `review_scores_histogram.png` — Distribution of review scores
-  - `price_vs_freight.png` — Product price vs freight cost scatter
-- Plotly time-slider demo (interactive window): Orders over time by year
-- Formatted Excel export saved to `exports/report.xlsx` with:
-  - Frozen header (`B2`), filters on all columns
-  - Numeric columns with a 3-color gradient scale
-  - Console summary: file name, sheet count, total rows
-
-Notes:
-- If your `reviews` table is empty, the script seeds a few synthetic reviews (delivered orders) for demo purposes so the histogram is not empty.
-- All data is loaded from PostgreSQL via SQL queries; queries use JOINs and meaningful business aggregations.
-
-Demo flow for defense:
-1. Run: `python main.py` to generate charts and open the Plotly slider.
-2. Insert/update a row (use your own insert or the included seeding), then rerun the relevant chart function by re-running the script to show the update reflected.
-
-
+**Student:** Ziaulhaq Parsa
+**Model Used:** *IronMan.obj*
+**Tool:** Python + Open3D
 
 ---
 
-**Author:** Parsa Karimi
-**Course:** Data Visualization — 2025/11/6
+## **Overview**
+
+This project demonstrates the visualization and geometric processing of a 3D model using **Open3D**.
+Starting from a mesh file, the program performs several transformations and visual effects to showcase core visualization concepts, including point clouds, surface reconstruction, voxelization, and color mapping.
+
+---
+
+## **Steps Implemented**
+
+1. **Load and Visualize the Model**
+
+    * Loads the `.obj` file and displays it in an interactive Open3D window.
+    * Shows key information such as vertices, triangles, and color properties.
+
+2. **Convert to Point Cloud**
+
+    * Samples ~50,000 points from the mesh to create a 3D point cloud.
+    * Used to represent the surface with discrete points for further processing.
+
+3. **Surface Reconstruction (Poisson Method)**
+
+    * Rebuilds a watertight surface from the sampled points.
+    * Demonstrates geometric modeling and normal estimation in 3D.
+
+4. **Voxelization**
+
+    * Converts the point cloud into a **voxel grid** (3D cubes).
+    * Simplifies the geometry and helps analyze spatial structure.
+
+5. **Plane Addition**
+
+    * Adds a flat reference plane beneath the model.
+    * Highlights object positioning and spatial alignment.
+
+6. **Surface Clipping**
+
+    * Removes points below a certain height (Y < 0).
+    * Demonstrates spatial filtering and geometric masking.
+
+7. **Color Gradient and Extremes**
+
+    * Applies a vertical color gradient based on the Z-axis.
+    * Marks the lowest and highest points with red and green spheres.
+
+8. **Bonus: Animated Gradient**
+
+    * Creates a live color-changing effect in a single visualization window.
+    * Adds an interactive and aesthetic element to the visualization.
+
+---
+
+## **Output**
+
+Each step opens an Open3D viewer window with the corresponding visualization.
+Final console output includes object statistics, point counts, and Z-axis extremes.
+
+---
+
+## **Requirements**
+
+* Python 3.8 +
+* Libraries:
+
+  ```bash
+  pip install open3d numpy
+  ```
+* 3D model files:
+  `IronMan.obj`, `IronMan.mtl`, `v1_0_IronManRigged.max`
+
+---
+
+## **Execution**
+
+Run the project with:
+
+```bash
+python main.py
+```
+Adjust the background or model name inside the script as needed.
+
+## **Notes**
+
+* Background can be toggled between dark or light via the `background` parameter in the `show()` function.
+* The script is modular, so each processing stage can be executed or skipped independently.
+
+---
+
+
+**Author:** Ziaulhaq Parsa Karimi
+**Course:** Data Visualization — 2025/11/13
